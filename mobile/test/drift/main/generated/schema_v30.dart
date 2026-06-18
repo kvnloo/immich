@@ -1654,6 +1654,24 @@ class LocalAssetEntity extends Table
     requiredDuringInsert: false,
     $customConstraints: 'NULL',
   );
+  late final GeneratedColumn<String> burstId = GeneratedColumn<String>(
+    'burst_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: 'NULL',
+  );
+  late final GeneratedColumn<int> isBurstRepresentative = GeneratedColumn<int>(
+    'is_burst_representative',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints:
+        'NOT NULL DEFAULT 0 CHECK (is_burst_representative IN (0, 1))',
+    defaultValue: const CustomExpression('0'),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     name,
@@ -1674,6 +1692,8 @@ class LocalAssetEntity extends Table
     playbackStyle,
     priorRemoteId,
     syncedChecksum,
+    burstId,
+    isBurstRepresentative,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1758,6 +1778,14 @@ class LocalAssetEntity extends Table
         DriftSqlType.string,
         data['${effectivePrefix}synced_checksum'],
       ),
+      burstId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}burst_id'],
+      ),
+      isBurstRepresentative: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}is_burst_representative'],
+      )!,
     );
   }
 
@@ -1796,6 +1824,8 @@ class LocalAssetEntityData extends DataClass
   final int playbackStyle;
   final String? priorRemoteId;
   final String? syncedChecksum;
+  final String? burstId;
+  final int isBurstRepresentative;
   const LocalAssetEntityData({
     required this.name,
     required this.type,
@@ -1815,6 +1845,8 @@ class LocalAssetEntityData extends DataClass
     required this.playbackStyle,
     this.priorRemoteId,
     this.syncedChecksum,
+    this.burstId,
+    required this.isBurstRepresentative,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1857,6 +1889,10 @@ class LocalAssetEntityData extends DataClass
     if (!nullToAbsent || syncedChecksum != null) {
       map['synced_checksum'] = Variable<String>(syncedChecksum);
     }
+    if (!nullToAbsent || burstId != null) {
+      map['burst_id'] = Variable<String>(burstId);
+    }
+    map['is_burst_representative'] = Variable<int>(isBurstRepresentative);
     return map;
   }
 
@@ -1884,6 +1920,10 @@ class LocalAssetEntityData extends DataClass
       playbackStyle: serializer.fromJson<int>(json['playbackStyle']),
       priorRemoteId: serializer.fromJson<String?>(json['priorRemoteId']),
       syncedChecksum: serializer.fromJson<String?>(json['syncedChecksum']),
+      burstId: serializer.fromJson<String?>(json['burstId']),
+      isBurstRepresentative: serializer.fromJson<int>(
+        json['isBurstRepresentative'],
+      ),
     );
   }
   @override
@@ -1908,6 +1948,8 @@ class LocalAssetEntityData extends DataClass
       'playbackStyle': serializer.toJson<int>(playbackStyle),
       'priorRemoteId': serializer.toJson<String?>(priorRemoteId),
       'syncedChecksum': serializer.toJson<String?>(syncedChecksum),
+      'burstId': serializer.toJson<String?>(burstId),
+      'isBurstRepresentative': serializer.toJson<int>(isBurstRepresentative),
     };
   }
 
@@ -1930,6 +1972,8 @@ class LocalAssetEntityData extends DataClass
     int? playbackStyle,
     Value<String?> priorRemoteId = const Value.absent(),
     Value<String?> syncedChecksum = const Value.absent(),
+    Value<String?> burstId = const Value.absent(),
+    int? isBurstRepresentative,
   }) => LocalAssetEntityData(
     name: name ?? this.name,
     type: type ?? this.type,
@@ -1955,6 +1999,8 @@ class LocalAssetEntityData extends DataClass
     syncedChecksum: syncedChecksum.present
         ? syncedChecksum.value
         : this.syncedChecksum,
+    burstId: burstId.present ? burstId.value : this.burstId,
+    isBurstRepresentative: isBurstRepresentative ?? this.isBurstRepresentative,
   );
   LocalAssetEntityData copyWithCompanion(LocalAssetEntityCompanion data) {
     return LocalAssetEntityData(
@@ -1990,6 +2036,10 @@ class LocalAssetEntityData extends DataClass
       syncedChecksum: data.syncedChecksum.present
           ? data.syncedChecksum.value
           : this.syncedChecksum,
+      burstId: data.burstId.present ? data.burstId.value : this.burstId,
+      isBurstRepresentative: data.isBurstRepresentative.present
+          ? data.isBurstRepresentative.value
+          : this.isBurstRepresentative,
     );
   }
 
@@ -2013,7 +2063,9 @@ class LocalAssetEntityData extends DataClass
           ..write('longitude: $longitude, ')
           ..write('playbackStyle: $playbackStyle, ')
           ..write('priorRemoteId: $priorRemoteId, ')
-          ..write('syncedChecksum: $syncedChecksum')
+          ..write('syncedChecksum: $syncedChecksum, ')
+          ..write('burstId: $burstId, ')
+          ..write('isBurstRepresentative: $isBurstRepresentative')
           ..write(')'))
         .toString();
   }
@@ -2038,6 +2090,8 @@ class LocalAssetEntityData extends DataClass
     playbackStyle,
     priorRemoteId,
     syncedChecksum,
+    burstId,
+    isBurstRepresentative,
   );
   @override
   bool operator ==(Object other) =>
@@ -2060,7 +2114,9 @@ class LocalAssetEntityData extends DataClass
           other.longitude == this.longitude &&
           other.playbackStyle == this.playbackStyle &&
           other.priorRemoteId == this.priorRemoteId &&
-          other.syncedChecksum == this.syncedChecksum);
+          other.syncedChecksum == this.syncedChecksum &&
+          other.burstId == this.burstId &&
+          other.isBurstRepresentative == this.isBurstRepresentative);
 }
 
 class LocalAssetEntityCompanion extends UpdateCompanion<LocalAssetEntityData> {
@@ -2082,6 +2138,8 @@ class LocalAssetEntityCompanion extends UpdateCompanion<LocalAssetEntityData> {
   final Value<int> playbackStyle;
   final Value<String?> priorRemoteId;
   final Value<String?> syncedChecksum;
+  final Value<String?> burstId;
+  final Value<int> isBurstRepresentative;
   const LocalAssetEntityCompanion({
     this.name = const Value.absent(),
     this.type = const Value.absent(),
@@ -2101,6 +2159,8 @@ class LocalAssetEntityCompanion extends UpdateCompanion<LocalAssetEntityData> {
     this.playbackStyle = const Value.absent(),
     this.priorRemoteId = const Value.absent(),
     this.syncedChecksum = const Value.absent(),
+    this.burstId = const Value.absent(),
+    this.isBurstRepresentative = const Value.absent(),
   });
   LocalAssetEntityCompanion.insert({
     required String name,
@@ -2121,6 +2181,8 @@ class LocalAssetEntityCompanion extends UpdateCompanion<LocalAssetEntityData> {
     this.playbackStyle = const Value.absent(),
     this.priorRemoteId = const Value.absent(),
     this.syncedChecksum = const Value.absent(),
+    this.burstId = const Value.absent(),
+    this.isBurstRepresentative = const Value.absent(),
   }) : name = Value(name),
        type = Value(type),
        id = Value(id);
@@ -2143,6 +2205,8 @@ class LocalAssetEntityCompanion extends UpdateCompanion<LocalAssetEntityData> {
     Expression<int>? playbackStyle,
     Expression<String>? priorRemoteId,
     Expression<String>? syncedChecksum,
+    Expression<String>? burstId,
+    Expression<int>? isBurstRepresentative,
   }) {
     return RawValuesInsertable({
       if (name != null) 'name': name,
@@ -2163,6 +2227,9 @@ class LocalAssetEntityCompanion extends UpdateCompanion<LocalAssetEntityData> {
       if (playbackStyle != null) 'playback_style': playbackStyle,
       if (priorRemoteId != null) 'prior_remote_id': priorRemoteId,
       if (syncedChecksum != null) 'synced_checksum': syncedChecksum,
+      if (burstId != null) 'burst_id': burstId,
+      if (isBurstRepresentative != null)
+        'is_burst_representative': isBurstRepresentative,
     });
   }
 
@@ -2185,6 +2252,8 @@ class LocalAssetEntityCompanion extends UpdateCompanion<LocalAssetEntityData> {
     Value<int>? playbackStyle,
     Value<String?>? priorRemoteId,
     Value<String?>? syncedChecksum,
+    Value<String?>? burstId,
+    Value<int>? isBurstRepresentative,
   }) {
     return LocalAssetEntityCompanion(
       name: name ?? this.name,
@@ -2205,6 +2274,9 @@ class LocalAssetEntityCompanion extends UpdateCompanion<LocalAssetEntityData> {
       playbackStyle: playbackStyle ?? this.playbackStyle,
       priorRemoteId: priorRemoteId ?? this.priorRemoteId,
       syncedChecksum: syncedChecksum ?? this.syncedChecksum,
+      burstId: burstId ?? this.burstId,
+      isBurstRepresentative:
+          isBurstRepresentative ?? this.isBurstRepresentative,
     );
   }
 
@@ -2265,6 +2337,14 @@ class LocalAssetEntityCompanion extends UpdateCompanion<LocalAssetEntityData> {
     if (syncedChecksum.present) {
       map['synced_checksum'] = Variable<String>(syncedChecksum.value);
     }
+    if (burstId.present) {
+      map['burst_id'] = Variable<String>(burstId.value);
+    }
+    if (isBurstRepresentative.present) {
+      map['is_burst_representative'] = Variable<int>(
+        isBurstRepresentative.value,
+      );
+    }
     return map;
   }
 
@@ -2288,7 +2368,9 @@ class LocalAssetEntityCompanion extends UpdateCompanion<LocalAssetEntityData> {
           ..write('longitude: $longitude, ')
           ..write('playbackStyle: $playbackStyle, ')
           ..write('priorRemoteId: $priorRemoteId, ')
-          ..write('syncedChecksum: $syncedChecksum')
+          ..write('syncedChecksum: $syncedChecksum, ')
+          ..write('burstId: $burstId, ')
+          ..write('isBurstRepresentative: $isBurstRepresentative')
           ..write(')'))
         .toString();
   }
@@ -9779,6 +9861,10 @@ class DatabaseAtV30 extends GeneratedDatabase {
     'idx_local_asset_prior_remote_id',
     'CREATE INDEX IF NOT EXISTS idx_local_asset_prior_remote_id ON local_asset_entity (prior_remote_id)',
   );
+  late final Index idxLocalAssetBurstId = Index(
+    'idx_local_asset_burst_id',
+    'CREATE INDEX IF NOT EXISTS idx_local_asset_burst_id ON local_asset_entity (burst_id)',
+  );
   late final Index idxStackPrimaryAssetId = Index(
     'idx_stack_primary_asset_id',
     'CREATE INDEX IF NOT EXISTS idx_stack_primary_asset_id ON stack_entity (primary_asset_id)',
@@ -9892,6 +9978,7 @@ class DatabaseAtV30 extends GeneratedDatabase {
     idxLocalAssetCloudId,
     idxLocalAssetCreatedAt,
     idxLocalAssetPriorRemoteId,
+    idxLocalAssetBurstId,
     idxStackPrimaryAssetId,
     uQRemoteAssetsOwnerChecksum,
     uQRemoteAssetsOwnerLibraryChecksum,

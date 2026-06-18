@@ -277,7 +277,6 @@ class MediumRepositoryContext {
     String? syncedChecksum,
     String? burstId,
     bool? isBurstRepresentative,
-    int? burstSelectionType,
   }) async {
     id ??= TestUtils.uuid();
     return db
@@ -303,7 +302,6 @@ class MediumRepositoryContext {
             syncedChecksum: .new(syncedChecksum),
             burstId: .new(burstId),
             isBurstRepresentative: .new(isBurstRepresentative ?? false),
-            burstSelectionType: .new(burstSelectionType ?? 0),
           ),
         );
   }
