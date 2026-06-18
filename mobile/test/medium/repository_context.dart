@@ -275,6 +275,9 @@ class MediumRepositoryContext {
     DateTime? updatedAt,
     String? priorRemoteId,
     String? syncedChecksum,
+    String? burstId,
+    bool? isBurstRepresentative,
+    int? burstSelectionType,
   }) async {
     id ??= TestUtils.uuid();
     return db
@@ -298,6 +301,9 @@ class MediumRepositoryContext {
             longitude: .new(longitude ?? TestUtils.randDouble(-180, 180)),
             priorRemoteId: .new(priorRemoteId),
             syncedChecksum: .new(syncedChecksum),
+            burstId: .new(burstId),
+            isBurstRepresentative: .new(isBurstRepresentative ?? false),
+            burstSelectionType: .new(burstSelectionType ?? 0),
           ),
         );
   }

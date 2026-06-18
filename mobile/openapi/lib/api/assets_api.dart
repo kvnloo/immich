@@ -1577,6 +1577,9 @@ class AssetsApi {
   /// * [bool] isFavorite:
   ///   Mark as favorite
   ///
+  /// * [bool] keepPrimary:
+  ///   When stacking via stackParentId, keep the parent/existing asset as the stack primary instead of promoting this one. Used by iOS burst frames.
+  ///
   /// * [String] livePhotoVideoId:
   ///   Live photo video ID
   ///
@@ -1590,7 +1593,7 @@ class AssetsApi {
   ///   Stack this asset onto the parent asset, with the new asset as the stack primary
   ///
   /// * [AssetVisibility] visibility:
-  Future<Response> uploadAssetWithHttpInfo(MultipartFile assetData, DateTime fileCreatedAt, DateTime fileModifiedAt, { String? key, String? slug, String? xImmichChecksum, int? duration, String? filename, bool? isFavorite, String? livePhotoVideoId, List<AssetMetadataUpsertItemDto>? metadata, MultipartFile? sidecarData, String? stackParentId, AssetVisibility? visibility, Future<void>? abortTrigger, }) async {
+  Future<Response> uploadAssetWithHttpInfo(MultipartFile assetData, DateTime fileCreatedAt, DateTime fileModifiedAt, { String? key, String? slug, String? xImmichChecksum, int? duration, String? filename, bool? isFavorite, bool? keepPrimary, String? livePhotoVideoId, List<AssetMetadataUpsertItemDto>? metadata, MultipartFile? sidecarData, String? stackParentId, AssetVisibility? visibility, Future<void>? abortTrigger, }) async {
     // ignore: prefer_const_declarations
     final apiPath = r'/assets';
 
@@ -1640,6 +1643,10 @@ class AssetsApi {
     if (isFavorite != null) {
       hasFields = true;
       mp.fields[r'isFavorite'] = parameterToString(isFavorite);
+    }
+    if (keepPrimary != null) {
+      hasFields = true;
+      mp.fields[r'keepPrimary'] = parameterToString(keepPrimary);
     }
     if (livePhotoVideoId != null) {
       hasFields = true;
@@ -1709,6 +1716,9 @@ class AssetsApi {
   /// * [bool] isFavorite:
   ///   Mark as favorite
   ///
+  /// * [bool] keepPrimary:
+  ///   When stacking via stackParentId, keep the parent/existing asset as the stack primary instead of promoting this one. Used by iOS burst frames.
+  ///
   /// * [String] livePhotoVideoId:
   ///   Live photo video ID
   ///
@@ -1722,8 +1732,8 @@ class AssetsApi {
   ///   Stack this asset onto the parent asset, with the new asset as the stack primary
   ///
   /// * [AssetVisibility] visibility:
-  Future<AssetMediaResponseDto?> uploadAsset(MultipartFile assetData, DateTime fileCreatedAt, DateTime fileModifiedAt, { String? key, String? slug, String? xImmichChecksum, int? duration, String? filename, bool? isFavorite, String? livePhotoVideoId, List<AssetMetadataUpsertItemDto>? metadata, MultipartFile? sidecarData, String? stackParentId, AssetVisibility? visibility, Future<void>? abortTrigger, }) async {
-    final response = await uploadAssetWithHttpInfo(assetData, fileCreatedAt, fileModifiedAt, key: key, slug: slug, xImmichChecksum: xImmichChecksum, duration: duration, filename: filename, isFavorite: isFavorite, livePhotoVideoId: livePhotoVideoId, metadata: metadata, sidecarData: sidecarData, stackParentId: stackParentId, visibility: visibility, abortTrigger: abortTrigger,);
+  Future<AssetMediaResponseDto?> uploadAsset(MultipartFile assetData, DateTime fileCreatedAt, DateTime fileModifiedAt, { String? key, String? slug, String? xImmichChecksum, int? duration, String? filename, bool? isFavorite, bool? keepPrimary, String? livePhotoVideoId, List<AssetMetadataUpsertItemDto>? metadata, MultipartFile? sidecarData, String? stackParentId, AssetVisibility? visibility, Future<void>? abortTrigger, }) async {
+    final response = await uploadAssetWithHttpInfo(assetData, fileCreatedAt, fileModifiedAt, key: key, slug: slug, xImmichChecksum: xImmichChecksum, duration: duration, filename: filename, isFavorite: isFavorite, keepPrimary: keepPrimary, livePhotoVideoId: livePhotoVideoId, metadata: metadata, sidecarData: sidecarData, stackParentId: stackParentId, visibility: visibility, abortTrigger: abortTrigger,);
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
     }
