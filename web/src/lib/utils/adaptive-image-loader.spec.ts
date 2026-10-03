@@ -160,6 +160,78 @@ describe('AdaptiveImageLoader', () => {
     });
   });
 
+  describe('scheduleTrigger', () => {
+    it('defers a quality trigger until the settle delay elapses', () => {
+      vi.useFakeTimers();
+      const imageLoader = vi.fn(() => vi.fn());
+      const loader = new AdaptiveImageLoader(createQualityList(), undefined, imageLoader);
+
+      expect(loader.scheduleTrigger('original', 180)).toBe(true);
+      expect(imageLoader).not.toHaveBeenCalled();
+
+      vi.advanceTimersByTime(179);
+      expect(imageLoader).not.toHaveBeenCalled();
+
+      vi.advanceTimersByTime(1);
+      expect(imageLoader).toHaveBeenCalledWith(
+        '/original.jpg',
+        expect.any(Function),
+        expect.any(Function),
+        expect.any(Function),
+      );
+      vi.useRealTimers();
+    });
+
+    it('restarts the settle window when the same quality is scheduled again', () => {
+      vi.useFakeTimers();
+      const imageLoader = vi.fn(() => vi.fn());
+      const loader = new AdaptiveImageLoader(createQualityList(), undefined, imageLoader);
+
+      loader.scheduleTrigger('original', 180);
+      vi.advanceTimersByTime(120);
+      loader.scheduleTrigger('original', 180);
+      vi.advanceTimersByTime(120);
+
+      expect(imageLoader).not.toHaveBeenCalled();
+
+      vi.advanceTimersByTime(60);
+      expect(imageLoader).toHaveBeenCalledOnce();
+      vi.useRealTimers();
+    });
+
+    it('cancels a pending trigger explicitly', () => {
+      vi.useFakeTimers();
+      const imageLoader = vi.fn(() => vi.fn());
+      const loader = new AdaptiveImageLoader(createQualityList(), undefined, imageLoader);
+
+      loader.scheduleTrigger('original', 180);
+      expect(loader.cancelScheduledTrigger('original')).toBe(true);
+      vi.runAllTimers();
+
+      expect(imageLoader).not.toHaveBeenCalled();
+      vi.useRealTimers();
+    });
+
+    it('cancels pending triggers on destroy', () => {
+      vi.useFakeTimers();
+      const imageLoader = vi.fn(() => vi.fn());
+      const loader = new AdaptiveImageLoader(createQualityList(), undefined, imageLoader);
+
+      loader.scheduleTrigger('original', 180);
+      loader.destroy();
+      vi.runAllTimers();
+
+      expect(imageLoader).not.toHaveBeenCalled();
+      vi.useRealTimers();
+    });
+
+    it('rejects invalid settle delays', () => {
+      const loader = new AdaptiveImageLoader(createQualityList());
+      expect(() => loader.scheduleTrigger('original', -1)).toThrow('delayMs');
+      expect(() => loader.scheduleTrigger('original', Number.NaN)).toThrow('delayMs');
+    });
+  });
+
   describe('trigger', () => {
     it('sets the URL for the quality', () => {
       const loader = new AdaptiveImageLoader(createQualityList());
