@@ -228,7 +228,7 @@ describe('AdaptiveImageLoader', () => {
     it('rejects invalid settle delays', () => {
       const loader = new AdaptiveImageLoader(createQualityList());
       expect(() => loader.scheduleTrigger('original', -1)).toThrow('delayMs');
-      expect(() => loader.scheduleTrigger('original', Number.NaN)).toThrow('delayMs');
+      expect(() => loader.scheduleTrigger('original', NaN)).toThrow('delayMs');
     });
   });
 
