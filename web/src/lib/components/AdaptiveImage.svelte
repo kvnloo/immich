@@ -65,6 +65,8 @@
   import { untrack, type Snippet } from 'svelte';
   import { languageManager } from '$lib/managers/language-manager.svelte';
 
+  const ORIGINAL_ZOOM_SETTLE_MS = 180;
+
   type Props = {
     asset: AssetResponseDto;
     sharedLink?: SharedLinkResponseDto;
@@ -96,7 +98,7 @@
 
   const afterThumbnail = (loader: AdaptiveImageLoader) => {
     if (assetViewerManager.zoom > 1) {
-      loader.trigger('original');
+      loader.scheduleTrigger('original', ORIGINAL_ZOOM_SETTLE_MS);
     } else {
       loader.trigger('preview');
     }
@@ -201,9 +203,17 @@
   });
 
   $effect(() => {
-    if (assetViewerManager.zoom > 1 && status.quality.original !== 'success') {
-      untrack(() => void adaptiveImageLoader.trigger('original'));
+    const zoom = assetViewerManager.zoom;
+    const originalReady = status.quality.original === 'success';
+
+    if (zoom <= 1 || originalReady) {
+      untrack(() => adaptiveImageLoader.cancelScheduledTrigger('original'));
+      return;
     }
+
+    untrack(() => void adaptiveImageLoader.scheduleTrigger('original', ORIGINAL_ZOOM_SETTLE_MS));
+
+    return () => adaptiveImageLoader.cancelScheduledTrigger('original');
   });
 
   let thumbnailElement = $state<HTMLImageElement>();
