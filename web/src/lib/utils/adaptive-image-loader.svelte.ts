@@ -1,3 +1,5 @@
+import { SvelteMap } from 'svelte/reactivity';
+
 import type { LoadImageFunction } from '$lib/actions/image-loader.svelte';
 import { cancelImageUrl } from '$lib/utils/sw-messaging';
 
@@ -36,7 +38,7 @@ export class AdaptiveImageLoader {
   private qualityConfigs: Record<ImageQuality, QualityConfig>;
   private highestLoadedQualityIndex = -1;
   private destroyed = false;
-  private scheduledTriggers = new Map<ImageQuality, ReturnType<typeof setTimeout>>();
+  private scheduledTriggers = new SvelteMap<ImageQuality, ReturnType<typeof setTimeout>>();
 
   status = $state<ImageLoaderStatus>({
     started: false,
