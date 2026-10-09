@@ -1,3 +1,5 @@
+import { SvelteMap } from 'svelte/reactivity';
+
 import type { LoadImageFunction } from '$lib/actions/image-loader.svelte';
 import { cancelImageUrl } from '$lib/utils/sw-messaging';
 
@@ -36,6 +38,7 @@ export class AdaptiveImageLoader {
   private qualityConfigs: Record<ImageQuality, QualityConfig>;
   private highestLoadedQualityIndex = -1;
   private destroyed = false;
+  private scheduledTriggers = new SvelteMap<ImageQuality, ReturnType<typeof setTimeout>>();
 
   status = $state<ImageLoaderStatus>({
     started: false,
@@ -119,6 +122,39 @@ export class AdaptiveImageLoader {
     config.onAfterError?.(this);
   }
 
+  scheduleTrigger(quality: ImageQuality, delayMs: number) {
+    if (this.destroyed) {
+      return false;
+    }
+    if (!Number.isFinite(delayMs) || delayMs < 0) {
+      throw new Error('delayMs must be a finite non-negative number');
+    }
+
+    this.cancelScheduledTrigger(quality);
+
+    // eslint-disable-next-line unicorn/no-computed-property-existence-check
+    if (this.status.urls[quality]) {
+      return false;
+    }
+
+    const timeout = setTimeout(() => {
+      this.scheduledTriggers.delete(quality);
+      this.trigger(quality);
+    }, delayMs);
+    this.scheduledTriggers.set(quality, timeout);
+    return true;
+  }
+
+  cancelScheduledTrigger(quality: ImageQuality) {
+    const timeout = this.scheduledTriggers.get(quality);
+    if (timeout === undefined) {
+      return false;
+    }
+    clearTimeout(timeout);
+    this.scheduledTriggers.delete(quality);
+    return true;
+  }
+
   trigger(quality: ImageQuality) {
     if (this.destroyed) {
       return false;
@@ -152,6 +188,10 @@ export class AdaptiveImageLoader {
 
   destroy() {
     this.destroyed = true;
+    for (const timeout of this.scheduledTriggers.values()) {
+      clearTimeout(timeout);
+    }
+    this.scheduledTriggers.clear();
     if (this.imageLoader) {
       for (const destroy of this.destroyFunctions) {
         destroy();
