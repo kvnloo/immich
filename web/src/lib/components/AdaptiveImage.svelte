@@ -97,10 +97,10 @@
   }: Props = $props();
 
   const afterThumbnail = (loader: AdaptiveImageLoader) => {
+    // Preserve a useful preview if zoom-out cancels a pending original promotion.
+    loader.trigger('preview');
     if (assetViewerManager.zoom > 1) {
       loader.scheduleTrigger('original', ORIGINAL_ZOOM_SETTLE_MS);
-    } else {
-      loader.trigger('preview');
     }
   };
 
