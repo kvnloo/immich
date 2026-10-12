@@ -16,6 +16,7 @@ jobs:
     timeout-minutes: 30
     permissions:
       contents: read
+      issues: write
     steps:
       - name: Checkout isolated candidate
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -46,6 +47,17 @@ jobs:
         run: |
           pnpm --dir web run check:svelte
           pnpm --dir web run check:typescript
+
+      - name: Report fork-only test outcome
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          LANE_F_JOB_STATUS: ${{ job.status }}
+          LANE_F_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        shell: bash
+        run: |
+          printf -v body 'Lane F registered workflow: **%s**, merge head `%s`. Full logs: %s. Scoped component/loader tests only.' "$LANE_F_JOB_STATUS" "$GITHUB_SHA" "$LANE_F_RUN_URL"
+          gh api repos/kvnloo/immich/issues/7/comments -f body="$body"
 
   pre-job:
     runs-on: ubuntu-latest
