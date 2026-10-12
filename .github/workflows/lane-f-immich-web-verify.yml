@@ -1,0 +1,68 @@
+name: Lane F Immich web verification (fork only)
+
+on:
+  push:
+    branches:
+      - experiment/lane-f-immich-actions-20261012
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lane-f-immich-web-verification-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  real-web-component-tests:
+    name: Actual Svelte component + web loader tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout isolated fork candidate
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Ensure candidate code derives from reviewed PR head
+        shell: bash
+        run: |
+          git merge-base --is-ancestor c7dc48c03df41bc57f1ad60b9b3134bea181ce12 HEAD
+          printf 'Lane F candidate base: c7dc48c03df41bc57f1ad60b9b3134bea181ce12\n'
+          git rev-parse HEAD
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+
+      - name: Setup Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install SDK and build
+        shell: bash
+        run: |
+          pnpm --filter @immich/sdk install --frozen-lockfile
+          pnpm --filter @immich/sdk build
+
+      - name: Install web dependencies and sync SvelteKit
+        shell: bash
+        run: |
+          pnpm --filter immich-web install --frozen-lockfile
+          pnpm --dir web exec svelte-kit sync
+
+      - name: Test actual Immich loader, image and AdaptiveImage Svelte component
+        shell: bash
+        run: |
+          pnpm --dir web exec vitest run \
+            src/lib/utils/adaptive-image-loader.spec.ts \
+            src/lib/components/Image.spec.ts \
+            src/lib/components/AdaptiveImage.lane-f.spec.ts
+
+      - name: Run actual Immich Svelte and TypeScript checks
+        shell: bash
+        run: |
+          pnpm --dir web run check:svelte
+          pnpm --dir web run check:typescript
