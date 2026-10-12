@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - experiment/lane-f-immich-actions-20261012
+  pull_request:
+    branches:
+      - revalidate/zoom-settle-current-main-20261009
   workflow_dispatch:
 
 permissions:
