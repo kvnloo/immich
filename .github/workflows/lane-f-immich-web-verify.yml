@@ -11,6 +11,7 @@ on:
 
 permissions:
   contents: read
+  issues: write
 
 concurrency:
   group: lane-f-immich-web-verification-${{ github.ref }}
@@ -69,3 +70,14 @@ jobs:
         run: |
           pnpm --dir web run check:svelte
           pnpm --dir web run check:typescript
+
+      - name: Post fork-only CI result receipt
+        if: always()
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          LANE_F_JOB_STATUS: ${{ job.status }}
+          LANE_F_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          printf -v body 'Lane F actual web check: **%s** at `%s`. Full logs: %s. No 200 MP decode or real-photo performance claim.' "$LANE_F_JOB_STATUS" "$GITHUB_SHA" "$LANE_F_RUN_URL"
+          gh api repos/kvnloo/immich/issues/7/comments -f body="$body"
